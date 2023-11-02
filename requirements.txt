@@ -3,3 +3,5 @@ cryptocode
 djangorestframework
 django-debug-toolbar
 django-cors-headers
+psycopg2
+python-dotenv
