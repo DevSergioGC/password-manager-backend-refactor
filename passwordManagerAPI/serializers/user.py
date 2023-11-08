@@ -20,4 +20,17 @@ class UserSerializer(serializers.ModelSerializer):
                 'min_length': 8,
                 'style': {'input_type': 'password'}
             },
+            'first_name': {'required': True},
+            'last_name': {'required': False},
+            'username': {'required': True, 'min_length': 5, 'max_length': 30},
+            'email': {'required': True},
         }
+    
+    def validate(self, data):
+        if User.objects.filter(username=data['username']).exists():
+            raise serializers.ValidationError(
+                {'username': 'Username already registered'})
+        if User.objects.filter(email=data['email']).exists():
+            raise serializers.ValidationError(
+                {'email': 'Email already registered'})
+        return data
