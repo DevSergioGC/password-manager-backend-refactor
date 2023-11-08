@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from models import Folder
+from passwordManagerAPI.models import Folder
 
 class FolderSerializer(serializers.ModelSerializer):
     class Meta:
