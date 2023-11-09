@@ -1,27 +1,33 @@
 from passwordManagerAPI.models import Folder
 from django.contrib.auth.models import User
-from passwordManagerAPI.serializers import UserSerializer
-from rest_framework import viewsets, status
+from passwordManagerAPI.serializers import UserSerializer, UserLoginSerializer
+from rest_framework import status, permissions
 from rest_framework.views import APIView
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth.decorators import login_required
-from rest_framework.authtoken.views import Token
-from django.http import Http404
+from django.contrib.auth import login, logout
 from rest_framework.response import Response
 
 
 class UserLoginView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
     def post(self, request):
-        pass
+        serializer = UserLoginSerializer(data=self.request.data,
+                                                 context={'request': self.request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        login(request, user)
+        return Response({"data": user}, status=status.HTTP_202_ACCEPTED)
 
 
 class UserLogoutView(APIView):
-    def post(self, request):
-        pass
+    def post(self, request, *args, **kwargs):
+        logout(request)
+        return Response({'detail': 'Successfully logged out.'})
 
 
 class UserRegisterView(APIView):
+    permission_classes = (permissions.AllowAny,)
+
     def post(self, request, format=None):
         user = request.data
         serializer = UserSerializer(data=user)
@@ -33,13 +39,10 @@ class UserRegisterView(APIView):
             new_user.set_password(user['password'])
             new_user.save()
 
-            #? Create 'default' folder related to created user
+            # ? Create 'default' folder related to created user
             new_folder = Folder.objects.create(
                 name='Default', user=new_user)
             new_folder.save()
-
-            # ? Create a user's Token
-            # Token.create(user=new_user)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:

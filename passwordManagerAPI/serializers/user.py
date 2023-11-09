@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
             'username': {'required': True, 'min_length': 5, 'max_length': 30},
             'email': {'required': True},
         }
-    
+
     def validate(self, data):
         if User.objects.filter(username=data['username']).exists():
             raise serializers.ValidationError(
