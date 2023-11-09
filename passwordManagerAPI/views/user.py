@@ -33,38 +33,14 @@ class UserRegisterView(APIView):
             new_user.set_password(user['password'])
             new_user.save()
 
-            # ? Create 'default' folder related to created user
+            #? Create 'default' folder related to created user
             new_folder = Folder.objects.create(
                 name='Default', user=new_user)
             new_folder.save()
 
             # ? Create a user's Token
-            Token.create(user=new_user)
+            # Token.create(user=new_user)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        # user = request.data
-        # serializer = UserSerializer(user)
-
-        # try:
-        #     if serializer.is_valid():
-        #         if serializer.validate(user):
-        #             new_user = User.objects.create(
-        #                 username=user['username'], first_name=user['first_name'])
-        #             new_user.set_password(user['password'])
-        #             new_user.save()
-
-        #             # ? Create 'default' folder related to created user
-        #             new_folder = Folder.objects.create(
-        #                 name='Default', user=new_user)
-        #             new_folder.save()
-
-        #             # ? Create a user's Token
-        #             Token.objects.create(user=new_user)
-
-        #             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        # except:
-        #     return Response(status=status.HTTP_400_BAD_REQUEST)
