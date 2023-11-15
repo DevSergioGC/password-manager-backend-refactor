@@ -11,16 +11,19 @@ class UserLoginView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
-        serializer = UserLoginSerializer(data=self.request.data,
-                                                 context={'request': self.request})
+        serializer = UserLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
+        user = serializer.validated_data
         login(request, user)
-        return Response({"data": user}, status=status.HTTP_202_ACCEPTED)
+        user_data = {
+            "id": user.id,
+            "username": user.username,
+        }
+        return Response({"data": user_data}, status=status.HTTP_202_ACCEPTED)
 
 
 class UserLogoutView(APIView):
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         logout(request)
         return Response({'detail': 'Successfully logged out.'})
 

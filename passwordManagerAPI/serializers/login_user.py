@@ -3,27 +3,23 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
 
-class UserLoginSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = [
-            'username',
-            'password',
-        ]
+class UserLoginSerializer(serializers.Serializer):
 
-        extra_kwargs = {
-            'password': {
-                'write_only': True,
-                'required': True,
-                'min_length': 8,
-                'style': {'input_type': 'password'}
-            },
-            'username': {'required': True, 'min_length': 5, 'max_length': 30},
-        }
+    username = serializers.CharField(
+        required=True, min_length=5, max_length=30)
+    password = serializers.CharField(
+        write_only=True, required=True, min_length=8, style={'input_type': 'password'})
 
     def validate(self, data):
-        user = authenticate(**data)
+        username = data.get('username')
+        password = data.get('password')
+        request = self.context.get('request')
+
+        user = authenticate(
+            request=request, username=username, password=password)
+
         if user and user.is_active:
             return user
+
         raise serializers.ValidationError(
             {'username': 'Invalid credentials'})
