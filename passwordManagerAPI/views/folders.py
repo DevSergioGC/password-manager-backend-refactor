@@ -1,4 +1,4 @@
-from passwordManagerAPI.models import Folder
+from passwordManagerAPI.models import Folder, Items
 from django.contrib.auth.models import User
 from passwordManagerAPI.serializers import FolderSerializer
 from rest_framework import viewsets, status
@@ -11,11 +11,7 @@ from django.http import Http404
 from rest_framework.response import Response
 
 
-# @login_required
 class FolderView(APIView):
-
-    # permission_classes = [IsAuthenticated]
-    # authentication_classes = (TokenAuthentication,)
 
     def get(self, request):
         folder = Folder.objects.filter(user=request.user.id)
@@ -36,13 +32,35 @@ class FolderView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-# @login_required
 class DetailFolderView(APIView):
-    def get(self, request):
-        pass
+    def get_object(self, pk):
+        try:
+            return Folder.objects.get(pk=pk)
+        except Folder.DoesNotExist:
+            raise Http404
 
-    def put(self, request):
-        pass
+    def get(self, request, pk, format=None):
+        folder = self.get_object(pk)
+        serializer = FolderSerializer(folder)
 
-    def delete(self, request):
-        pass
+        return Response(serializer.data)
+
+    def put(self, request, pk, format=None):
+        folder = self.get_object(pk)
+        serializer = FolderSerializer(folder, data=request.data)
+
+        if serializer.is_valid():
+
+            serializer.save()
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        folder = self.get_object(pk)
+        default = Folder.objects.filter(user=self.request.user).first()
+        item = Items.objects.filter(folder=folder).update(folder=default)
+        folder.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
