@@ -1,12 +1,7 @@
 from passwordManagerAPI.models import Folder, Items
-from django.contrib.auth.models import User
 from passwordManagerAPI.serializers import FolderSerializer
-from rest_framework import viewsets, status
+from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth.decorators import login_required
-from rest_framework.authtoken.views import Token
 from django.http import Http404
 from rest_framework.response import Response
 
@@ -34,10 +29,12 @@ class FolderView(APIView):
 
 class DetailFolderView(APIView):
     def get_object(self, pk):
-        try:
-            return Folder.objects.get(pk=pk)
-        except Folder.DoesNotExist:
+        folder = Folder.objects.filter(
+            user=self.request.user.id, pk=pk).first()
+
+        if folder is None:
             raise Http404
+        return folder
 
     def get(self, request, pk, format=None):
         folder = self.get_object(pk)
@@ -47,20 +44,28 @@ class DetailFolderView(APIView):
 
     def put(self, request, pk, format=None):
         folder = self.get_object(pk)
+
+        if folder.verify_default_folder():
+            return Response({"error": 'You cannot edit the default folder.'}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = FolderSerializer(folder, data=request.data)
 
         if serializer.is_valid():
-
             serializer.save()
-
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
         folder = self.get_object(pk)
-        default = Folder.objects.filter(user=self.request.user).first()
-        item = Items.objects.filter(folder=folder).update(folder=default)
+
+        if folder.verify_default_folder():
+            return Response({"error": 'You cannot delete the default folder.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        default = Folder.objects.filter(
+            user=self.request.user, name='default').first()
+        item = Items.objects.filter(
+            folder=folder, user=self.request.user).update(folder=default)
         folder.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
