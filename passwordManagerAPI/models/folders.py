@@ -13,3 +13,9 @@ class Folder(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def verify_default_folder(self):
+        if self.name == 'default':
+            return True
+        else:
+            return False
