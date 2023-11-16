@@ -44,12 +44,14 @@ class DetailFolderView(APIView):
 
     def put(self, request, pk, format=None):
         folder = self.get_object(pk)
+
+        if folder.verify_default_folder():
+            return Response({"error": 'You cannot edit the default folder.'}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = FolderSerializer(folder, data=request.data)
 
         if serializer.is_valid():
-
             serializer.save()
-
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -58,7 +60,7 @@ class DetailFolderView(APIView):
         folder = self.get_object(pk)
 
         if folder.verify_default_folder():
-            return Response(status=status.HTTP_400_BAD_REQUEST, message='You cannot delete the default folder.')
+            return Response({"error": 'You cannot delete the default folder.'}, status=status.HTTP_400_BAD_REQUEST)
 
         default = Folder.objects.filter(
             user=self.request.user, name='default').first()
