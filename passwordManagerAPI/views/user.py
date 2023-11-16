@@ -44,7 +44,7 @@ class UserRegisterView(APIView):
 
             # ? Create 'default' folder related to created user
             new_folder = Folder.objects.create(
-                name='Default', user=new_user)
+                name='default', user=new_user)
             new_folder.save()
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
